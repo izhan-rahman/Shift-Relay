@@ -10,7 +10,7 @@ import ResumeNotification from './components/ResumeNotification';
 import MasterDashboard from './pages/MasterDashboard';
 import LoginPage from './pages/LoginPage';
 import { getShiftStatus, getUpcomingShiftNotification, formatRemaining, formatDuration } from './utils/shiftSchedule';
-import { fetchSharedState } from './utils/stateApi';
+import { fetchSharedState, fetchSchedule } from './utils/stateApi';
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuth();
@@ -29,12 +29,24 @@ function Dashboard() {
   const [notif, setNotif] = useState(null);
   const [loggedIn, setLoggedIn] = useState([]);
   const [pauseState, setPauseState] = useState({});
+  const [schedule, setSchedule] = useState([]);
+
+  // Fetch schedule from server once, then refresh every 60s
+  useEffect(() => {
+    const loadSchedule = async () => {
+      const s = await fetchSchedule();
+      if (s.length > 0) setSchedule(s);
+    };
+    loadSchedule();
+    const iv = setInterval(loadSchedule, 60000);
+    return () => clearInterval(iv);
+  }, []);
 
   useEffect(() => {
     const tick = async () => {
       const now = new Date();
-      setShift(getShiftStatus(now));
-      setNotif(getUpcomingShiftNotification(now, 30));
+      setShift(getShiftStatus(now, schedule));
+      setNotif(getUpcomingShiftNotification(now, 30, schedule));
       const s = await fetchSharedState();
       setLoggedIn(s.loggedInEmployees || []);
       setPauseState(s.pauseState || {});
@@ -42,7 +54,12 @@ function Dashboard() {
     tick();
     const iv = setInterval(tick, 1000);
     return () => clearInterval(iv);
-  }, []);
+  }, [schedule]);
+
+  const employees = schedule.map((s, i) => ({
+    name: s.name,
+    time: s.label || `${s.startHour}:00 – ${s.endHour > 24 ? s.endHour - 24 : s.endHour}:00`,
+  }));
 
   const rem = formatRemaining(shift.remainingMs);
   const st = getRunnerStatus(shift.shiftName, loggedIn, pauseState);
@@ -57,9 +74,9 @@ function Dashboard() {
         {notif && <ShiftNotification name={notif.name} shift={notif.shift} minutesUntil={notif.minutesUntil} />}
         {resumeInfo && <ResumeNotification name={resumeInfo.name} gapMs={resumeInfo.gapMs} onDismiss={dismissResumeInfo} />}
         <div className="flex-1 overflow-hidden relative pb-[140px]">
-          <MainContent activeIndex={shift.activeIndex} progress={shift.progress} loggedInEmployees={loggedIn} runnerStatus={st} pausedProgress={pProg} pauseDuration={pDur} />
+          <MainContent activeIndex={shift.activeIndex} progress={shift.progress} loggedInEmployees={loggedIn} runnerStatus={st} pausedProgress={pProg} pauseDuration={pDur} employees={employees} />
         </div>
-        <BottomProgressPanel currentRunner={shift.shiftName} progress={dProg} remaining={rem} runnerStatus={st} pauseDuration={pDur} />
+        <BottomProgressPanel currentRunner={shift.shiftName} progress={dProg} remaining={rem} runnerStatus={st} pauseDuration={pDur} employees={employees} />
       </div>
     </MainLayout>
   );

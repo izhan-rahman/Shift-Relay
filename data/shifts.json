@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "name": "SUHAIL",
+    "startHour": 9,
+    "endHour": 18,
+    "label": "9:00 AM – 6:00 PM",
+    "order": 1,
+    "effectiveFrom": "2026-01-01",
+    "effectiveUntil": null
+  },
+  {
+    "id": 2,
+    "name": "AZEEZ",
+    "startHour": 18,
+    "endHour": 26,
+    "label": "6:00 PM – 2:00 AM",
+    "order": 2,
+    "effectiveFrom": "2026-01-01",
+    "effectiveUntil": null
+  },
+  {
+    "id": 3,
+    "name": "IQBAL",
+    "startHour": 2,
+    "endHour": 9,
+    "label": "2:00 AM – 9:00 AM",
+    "order": 3,
+    "effectiveFrom": "2026-01-01",
+    "effectiveUntil": null
+  }
+]

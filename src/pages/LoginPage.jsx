@@ -1,15 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { fetchEmployees } from '../utils/stateApi';
 import { Zap, Eye, EyeOff, LogIn, ArrowRight, Shield, User, Sun, Moon } from 'lucide-react';
 
-const QUICK = [
-    { name: "SUHAIL", password: "suhail123", color: "cyan" },
-    { name: "AZEEZ", password: "azeez123", color: "blue" },
-    { name: "IQBAL", password: "iqbal123", color: "indigo" },
-    { name: "MASTER", password: "master123", color: "purple" },
-];
+const COLORS = ['cyan', 'blue', 'indigo', 'emerald', 'violet', 'pink', 'amber', 'rose'];
 
 export default function LoginPage() {
     const [username, setUsername] = useState('');
@@ -18,9 +14,14 @@ export default function LoginPage() {
     const [error, setError] = useState('');
     const [shaking, setShaking] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [employees, setEmployees] = useState([]);
     const navigate = useNavigate();
     const { login, isAuthenticated, isMaster } = useAuth();
     const { isDark, toggleTheme } = useTheme();
+
+    useEffect(() => {
+        fetchEmployees().then(emps => setEmployees(emps));
+    }, []);
 
     if (isAuthenticated) return <Navigate to={isMaster ? "/master" : "/dashboard"} replace />;
 
@@ -37,8 +38,25 @@ export default function LoginPage() {
         cyan: { bg: 'bg-cyan-500/10', border: 'border-cyan-500/20', hover: 'hover:bg-cyan-500/20 hover:border-cyan-500/40', iconBg: 'bg-cyan-500/20', text: 'text-cyan-400' },
         blue: { bg: 'bg-blue-500/10', border: 'border-blue-500/20', hover: 'hover:bg-blue-500/20 hover:border-blue-500/40', iconBg: 'bg-blue-500/20', text: 'text-blue-400' },
         indigo: { bg: 'bg-indigo-500/10', border: 'border-indigo-500/20', hover: 'hover:bg-indigo-500/20 hover:border-indigo-500/40', iconBg: 'bg-indigo-500/20', text: 'text-indigo-400' },
+        emerald: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', hover: 'hover:bg-emerald-500/20 hover:border-emerald-500/40', iconBg: 'bg-emerald-500/20', text: 'text-emerald-400' },
+        violet: { bg: 'bg-violet-500/10', border: 'border-violet-500/20', hover: 'hover:bg-violet-500/20 hover:border-violet-500/40', iconBg: 'bg-violet-500/20', text: 'text-violet-400' },
+        pink: { bg: 'bg-pink-500/10', border: 'border-pink-500/20', hover: 'hover:bg-pink-500/20 hover:border-pink-500/40', iconBg: 'bg-pink-500/20', text: 'text-pink-400' },
+        amber: { bg: 'bg-amber-500/10', border: 'border-amber-500/20', hover: 'hover:bg-amber-500/20 hover:border-amber-500/40', iconBg: 'bg-amber-500/20', text: 'text-amber-400' },
         purple: { bg: 'bg-purple-500/10', border: 'border-purple-500/20', hover: 'hover:bg-purple-500/20 hover:border-purple-500/40', iconBg: 'bg-purple-500/20', text: 'text-purple-400' },
+        rose: { bg: 'bg-rose-500/10', border: 'border-rose-500/20', hover: 'hover:bg-rose-500/20 hover:border-rose-500/40', iconBg: 'bg-rose-500/20', text: 'text-rose-400' },
     };
+
+    // Build quick login buttons from dynamic employee list
+    const quickButtons = employees.map((emp, i) => ({
+        name: emp.name,
+        color: emp.role === 'master' ? 'purple' : COLORS[i % COLORS.length],
+        isMaster: emp.role === 'master',
+    }));
+
+    // Determine grid columns based on count
+    const gridCols = quickButtons.length <= 4 ? 'grid-cols-4'
+        : quickButtons.length <= 6 ? 'grid-cols-3'
+            : 'grid-cols-4';
 
     return (
         <div className="min-h-screen t-bg flex items-center justify-center relative overflow-hidden">
@@ -70,22 +88,24 @@ export default function LoginPage() {
                     </div>
 
                     {/* Quick Login */}
-                    <div className="px-8 pb-4">
-                        <p className="text-[10px] t-muted uppercase tracking-[0.25em] font-semibold mb-3">Quick Login</p>
-                        <div className="grid grid-cols-4 gap-2">
-                            {QUICK.map(q => {
-                                const c = colorMap[q.color]; return (
-                                    <button key={q.name} onClick={() => doLogin(q.name, q.password)} disabled={loading}
-                                        className={`group flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl transition-all duration-200 disabled:opacity-50 ${c.bg} border ${c.border} ${c.hover}`}>
-                                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${c.iconBg}`}>
-                                            {q.name === 'MASTER' ? <Shield className={`w-3.5 h-3.5 ${c.text}`} /> : <User className={`w-3.5 h-3.5 ${c.text}`} />}
-                                        </div>
-                                        <span className={`text-[9px] font-bold uppercase tracking-wider ${c.text}`}>{q.name}</span>
-                                    </button>
-                                );
-                            })}
+                    {quickButtons.length > 0 && (
+                        <div className="px-8 pb-4">
+                            <p className="text-[10px] t-muted uppercase tracking-[0.25em] font-semibold mb-3">Quick Login</p>
+                            <div className={`grid ${gridCols} gap-2`}>
+                                {quickButtons.map(q => {
+                                    const c = colorMap[q.color] || colorMap.cyan; return (
+                                        <button key={q.name} onClick={() => { setUsername(q.name); setPassword(''); }}
+                                            className={`group flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl transition-all duration-200 disabled:opacity-50 ${c.bg} border ${c.border} ${c.hover}`}>
+                                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${c.iconBg}`}>
+                                                {q.isMaster ? <Shield className={`w-3.5 h-3.5 ${c.text}`} /> : <User className={`w-3.5 h-3.5 ${c.text}`} />}
+                                            </div>
+                                            <span className={`text-[9px] font-bold uppercase tracking-wider ${c.text}`}>{q.name}</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     {/* Divider */}
                     <div className="px-8 flex items-center gap-3 mb-4">

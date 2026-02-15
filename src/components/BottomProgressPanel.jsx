@@ -1,10 +1,14 @@
 import { Timer, ArrowRight, Users, Pause, Clock } from 'lucide-react';
 
-export default function BottomProgressPanel({ currentRunner = "SUHAIL", progress = 0, remaining, runnerStatus = "running", pauseDuration = '' }) {
+const DEFAULT_EMPLOYEES = ["SUHAIL", "AZEEZ", "IQBAL"];
+
+export default function BottomProgressPanel({ currentRunner = "SUHAIL", progress = 0, remaining, runnerStatus = "running", pauseDuration = '', employees: employeeProp }) {
     const pct = Math.round(progress * 100);
-    const employees = ["SUHAIL", "AZEEZ", "IQBAL"];
-    const idx = employees.indexOf(currentRunner);
-    const next = employees[(idx + 1) % 3];
+    const employeeNames = employeeProp && employeeProp.length > 0
+        ? employeeProp.map(e => typeof e === 'string' ? e : e.name)
+        : DEFAULT_EMPLOYEES;
+    const idx = employeeNames.indexOf(currentRunner);
+    const next = employeeNames[(idx + 1) % employeeNames.length] || '—';
     const display = remaining ? remaining.display : "—:—:—";
     const paused = runnerStatus === "paused";
     const waiting = runnerStatus === "waiting";
@@ -49,11 +53,13 @@ export default function BottomProgressPanel({ currentRunner = "SUHAIL", progress
                         <div className={`absolute inset-0 ${paused ? 'bg-gradient-to-r from-red-500 via-orange-500 to-red-500' : waiting ? 'bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-500' : 'bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 animate-gradient'}`}></div>
                         <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent"></div>
                     </div>
-                    <div className="absolute top-0 bottom-0 left-1/3 w-px bg-slate-600/20"></div>
-                    <div className="absolute top-0 bottom-0 left-2/3 w-px bg-slate-600/20"></div>
+                    {/* Dynamic segment dividers */}
+                    {employeeNames.length > 1 && employeeNames.slice(1).map((_, i) => (
+                        <div key={i} className="absolute top-0 bottom-0 w-px bg-slate-600/20" style={{ left: `${((i + 1) / employeeNames.length) * 100}%` }}></div>
+                    ))}
                 </div>
                 <div className="flex items-center justify-between text-[8px] t-muted uppercase tracking-[0.25em] font-medium px-1">
-                    {employees.map((e, i) => <span key={e} className={i === idx ? (paused ? 'text-red-400' : waiting ? 'text-amber-400' : 'text-cyan-500') : ''}>{e}</span>)}
+                    {employeeNames.map((e, i) => <span key={e} className={i === idx ? (paused ? 'text-red-400' : waiting ? 'text-amber-400' : 'text-cyan-500') : ''}>{e}</span>)}
                 </div>
             </div>
         </div>

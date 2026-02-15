@@ -1,0 +1,32 @@
+[
+  {
+    "name": "SUHAIL",
+    "email": "suhail@shift.com",
+    "password": "suhail123",
+    "role": "employee"
+  },
+  {
+    "name": "AZEEZ",
+    "email": "azeez@shift.com",
+    "password": "12345",
+    "role": "employee"
+  },
+  {
+    "name": "IQBAL",
+    "email": "iqbal@shift.com",
+    "password": "iqbal123",
+    "role": "employee"
+  },
+  {
+    "name": "MASTER",
+    "email": "master@shift.com",
+    "password": "master123",
+    "role": "master"
+  },
+  {
+    "name": "ALHAN",
+    "email": "alhan@gmail.com",
+    "password": "1234",
+    "role": "employee"
+  }
+]
